@@ -13,6 +13,8 @@ const file = fs.readFileSync(path.join(__dirname + "/sample-log.log"), {
 const requests = file.split("\n");
 
 const ips = new Map();
+const routes = new Map();
+const exitCodes = new Map();
 let startDate, endDate;
 let processed = 0;
 
@@ -39,11 +41,9 @@ for (let i = 0; i < requests.length - 1; i++) {
     ] = match.slice(1);
     processed++;
 
-	if (ips.has(ip)) {
-		ips.set(ip, ips.get(ip) + 1);
-	} else {
-		ips.set(ip, 1);
-	}
+    ips.set(ip, (ips.get(ip) ?? 0) + 1);
+    routes.set(route, (routes.get(route) ?? 0) + 1);
+    exitCodes.set(statusCode, (exitCodes.get(statusCode) ?? 0) + 1);
 
 	if (i == 0) startDate = dateString;
 	else if (i == requests.length - 2) endDate = dateString;
@@ -54,7 +54,14 @@ console.log("processed: " + processed);
 console.log(startDate, endDate);
 
 const top10Ips = utils.getTop10ActivityIPs([...ips.entries()]);
+const top10Routes = utils.getTop10ActivityIPs([...routes.entries()]);
+console.log("ips: " + ips.size);
 console.log(top10Ips);
+console.log("routes: " + routes.size);
+console.log(top10Routes);
+
+console.log("status codes: " + exitCodes.size);
+console.log(exitCodes);
 
 const activityByHighestActivityIps = top10Ips.reduce(
 	(prev, [_ip, activity]) => prev + activity,
@@ -74,3 +81,14 @@ console.log(
 		}%`,
 	].join("\n")
 );
+
+function sortMap(map) {
+    return [...map.entries()].sort((a, b) => b[1] - a[1]);
+}
+
+const ipObj = Object.fromEntries(sortMap(ips));
+const routesObj = Object.fromEntries(sortMap(routes));
+
+fs.writeFileSync('ips.json', JSON.stringify(ipObj, null, 2, 'utf-8'));
+fs.writeFileSync('routes.json', JSON.stringify(routesObj, null, 2, 'utf-8'));
+
