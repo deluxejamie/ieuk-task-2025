@@ -12,19 +12,19 @@ const file = fs.readFileSync(path.join(__dirname + "/sample-log.log"), {
 
 const requests = file.split("\n");
 
+/* Maps */
 const ips = new Map();
 const routes = new Map();
-
 const exitCodes = new Map();
-const exitCodesResponseTimesSum = new Map();
+// const exitCodesResponseTimesSum = new Map();
 const routeResponseTimesSum = new Map();
 const exitCodesRTSum = new Map();
-
 const countryCodes = new Map();
 const countryCodesRTSum = new Map();
 
 let startDate, endDate;
 
+/* Loop */
 for (let i = 0; i < requests.length - 1; i++) {
 	const request = requests[i];
 	const match = request.match(
@@ -63,12 +63,18 @@ for (let i = 0; i < requests.length - 1; i++) {
         (routeResponseTimesSum.get(route) ?? 0) + +responseTime
     );
 
+    const paramsString = route.split("?")
+    if (paramsString.length > 1) {
+        const searchParams = new URLSearchParams(paramsString[1]);
+        console.log(searchParams);
+    }
+
 	if (i == 0) startDate = dateString;
 	else if (i == requests.length - 2) endDate = dateString;
 }
 
 const top10Ips = utils.getTop10ByKVP([...ips.entries()]);
-const top10Routes = utils.getTop10ByKVP([...routes.entries()]);
+// const top10Routes = utils.getTop10ByKVP([...routes.entries()]);
 
 const averageResponseSpeedByStatusCode = [...exitCodesRTSum.entries()].map(
 	([statusCode, val]) => [statusCode, val / exitCodes.get(statusCode)]
