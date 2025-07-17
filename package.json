@@ -1,11 +1,11 @@
 {
-  "name": "ieuk-task-2025",
-  "version": "1.0.0",
-  "description": "Some exploratory analysis for the ieuk engineering task",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "***REMOVED***, Nok Hang Lo",
-  "license": "UNLICENSED"
+	"name": "ieuk-task-2025",
+	"version": "1.0.0",
+	"description": "Some exploratory analysis for the ieuk engineering task",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "deluxejamie, bluetot",
+	"license": "UNLICENSED"
 }
