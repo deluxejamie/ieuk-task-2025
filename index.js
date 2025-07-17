@@ -7,9 +7,11 @@ const utils = require("./utils");
  */
 
 // read file and split lines
-const requests = fs.readFileSync(path.join(__dirname + "/sample-log.log"), {
-	encoding: "utf-8",
-}).split("\n");
+const requests = fs
+	.readFileSync(path.join(__dirname + "/sample-log.log"), {
+		encoding: "utf-8",
+	})
+	.split("\n");
 
 /* Maps */
 const ips = new Map();
@@ -46,26 +48,25 @@ for (let i = 0; i < requests.length - 1; i++) {
 		responseTime,
 	] = match.slice(1);
 
-    utils.incrementCounter(ips, ip);
-    utils.incrementCounter(routes, route);
-    utils.incrementCounter(exitCodes, statusCode);
-    utils.addValue(exitCodesRTSum, statusCode, responseTime);
-    utils.incrementCounter(countryCodes, countryCode);
-    utils.addValue(countryCodesRTSum, countryCode, responseTime);
-    utils.addValue(routesRTSum, route, responseTime);
+	utils.incrementCounter(ips, ip);
+	utils.incrementCounter(routes, route);
+	utils.incrementCounter(exitCodes, statusCode);
+	utils.addValue(exitCodesRTSum, statusCode, responseTime);
+	utils.incrementCounter(countryCodes, countryCode);
+	utils.addValue(countryCodesRTSum, countryCode, responseTime);
+	utils.addValue(routesRTSum, route, responseTime);
 
-    const paramsString = route.split("?")
-    if (paramsString.length > 1) {
-        const searchParams = new URLSearchParams(paramsString[1]);
-        score = utils.scoreCounter(utils.Counter(searchParams));
-        utils.incrementCounter(paramCounts, score);
-        utils.addValue(paramCountRTSum, score, responseTime);
-    }
-    
+	const paramsString = route.split("?");
+	if (paramsString.length > 1) {
+		const searchParams = new URLSearchParams(paramsString[1]);
+		score = utils.scoreCounter(utils.Counter(searchParams));
+		utils.incrementCounter(paramCounts, score);
+		utils.addValue(paramCountRTSum, score, responseTime);
+	}
+
 	if (i == 0) startDate = dateString;
 	else if (i == requests.length - 2) endDate = dateString;
 }
-
 
 /* convert maps into averages, and get top 10 */
 
@@ -80,8 +81,8 @@ const averageResponseTimeByCountryCode = utils.averageRT(
 );
 const averageResponseSpeedByRoute = utils.averageRT(routesRTSum, routes);
 const averageResponseTimeByParamCount = utils.averageRT(
-    paramCountRTSum, 
-    paramCounts
+	paramCountRTSum,
+	paramCounts
 );
 const activityByHighestActivityIps = top10Ips.reduce(
 	(prev, [_ip, activity]) => prev + activity,
@@ -108,6 +109,7 @@ console.log(
 	[
 		`Total Requests: ${requests.length}`,
 		`Unique IPs: ${ips.size}`,
+		`Log Interval: ${startDate} - ${endDate}`,
 		`Average Number of Requests per IP: ${requests.length / ips.size}`,
 		`Average Number of Requests by Top 10 IPs: ${
 			activityByHighestActivityIps / 10
@@ -130,4 +132,3 @@ console.log(
 		),
 	].join("\n")
 );
-
