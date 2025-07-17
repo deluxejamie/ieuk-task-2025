@@ -79,8 +79,10 @@ module.exports = {
 	 * @param {Object} object The object to save
 	 */
 	saveToFile: (filename, object) => {
+		if (!fs.existsSync(path.join(__dirname + "/../results/")))
+			fs.mkdirSync(path.join(__dirname + "/../results/"));
 		fs.writeFileSync(
-			path.join(__dirname + "/../" + filename),
+			path.join(__dirname + "/../results/" + filename),
 			JSON.stringify(object, null, 2, "utf-8")
 		);
 	},
