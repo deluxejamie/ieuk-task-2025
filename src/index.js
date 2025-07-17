@@ -8,7 +8,7 @@ const utils = require("./utils");
 
 // read file and split lines
 const requests = fs
-	.readFileSync(path.join(__dirname + "/sample-log.log"), {
+	.readFileSync(path.join(__dirname + "/../sample-log.log"), {
 		encoding: "utf-8",
 	})
 	.split("\n");
