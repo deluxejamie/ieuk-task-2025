@@ -1,3 +1,5 @@
+const fs = require("node:fs");
+
 module.exports = {
 	/**
 	 *
@@ -69,6 +71,14 @@ module.exports = {
      */
     addValue: (map, key, value) => {
         map.set(key, (map.get(key) ?? 0) + +value);
+    },
+
+    /**
+     * @param {str} filename The filename to save to
+     * @param {Object} object The object to save
+     */
+    saveToFile: (filename, object) => {
+            fs.writeFileSync(filename, JSON.stringify(object, null, 2, "utf-8"));
     }
 
 }

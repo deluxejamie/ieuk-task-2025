@@ -70,42 +70,37 @@ for (let i = 0; i < requests.length - 1; i++) {
 /* convert maps into averages, and get top 10 */
 
 const top10Ips = utils.getTop10ByKVP([...ips.entries()]);
-// const top10Routes = utils.getTop10ByKVP([...routes.entries()]);
-
 const averageResponseSpeedByStatusCode = utils.averageRT(
 	exitCodesRTSum,
 	exitCodes
 );
-
 const averageResponseTimeByCountryCode = utils.averageRT(
 	countryCodesRTSum,
 	countryCodes
 );
-
 const averageResponseSpeedByRoute = utils.averageRT(routesRTSum, routes);
-
 const averageResponseTimeByParamCount = utils.averageRT(
     paramCountRTSum, 
     paramCounts
+);
+const activityByHighestActivityIps = top10Ips.reduce(
+	(prev, [_ip, activity]) => prev + activity,
+	0
 );
 
 /* save to file */
 
 const paramCountObj = utils.sortMap(new Map(averageResponseTimeByParamCount));
-fs.writeFileSync("paramCountTimes.json", JSON.stringify(paramCountObj, null, 2, "utf-8"));
-
 const routeResponseTimeObj = Object.fromEntries(
 	utils.sortMap(new Map(averageResponseSpeedByRoute))
 );
-fs.writeFileSync(
-	"routeTimes.json",
-	JSON.stringify(routeResponseTimeObj, null, 2, "utf-8")
-);
+const ipObj = Object.fromEntries(utils.sortMap(ips));
+const routesObj = Object.fromEntries(utils.sortMap(routes));
 
-const activityByHighestActivityIps = top10Ips.reduce(
-	(prev, [_ip, activity]) => prev + activity,
-	0
-);
+utils.saveToFile("paramCountTimes.json", paramCountObj);
+utils.saveToFile("routeTimes.json", routeResponseTimeObj);
+utils.saveToFile("ips.json", ipObj);
+utils.saveToFile("routes.json", routesObj);
 
 /* print to terminal */
 
@@ -136,8 +131,3 @@ console.log(
 	].join("\n")
 );
 
-// const ipObj = Object.fromEntries(sortMap(ips));
-// const routesObj = Object.fromEntries(sortMap(routes));
-
-// fs.writeFileSync("ips.json", JSON.stringify(ipObj, null, 2, "utf-8"));
-// fs.writeFileSync("routes.json", JSON.stringify(routesObj, null, 2, "utf-8"));
