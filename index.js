@@ -14,9 +14,15 @@ const requests = file.split("\n");
 
 const ips = new Map();
 const routes = new Map();
+
 const exitCodes = new Map();
 const exitCodesResponseTimesSum = new Map();
 const routeResponseTimesSum = new Map();
+const exitCodesRTSum = new Map();
+
+const countryCodes = new Map();
+const countryCodesRTSum = new Map();
+
 let startDate, endDate;
 
 for (let i = 0; i < requests.length - 1; i++) {
@@ -42,9 +48,15 @@ for (let i = 0; i < requests.length - 1; i++) {
 	ips.set(ip, (ips.get(ip) ?? 0) + 1);
 	routes.set(route, (routes.get(route) ?? 0) + 1);
 	exitCodes.set(statusCode, (exitCodes.get(statusCode) ?? 0) + 1);
-	exitCodesResponseTimesSum.set(
+	exitCodesRTSum.set(
 		statusCode,
-		(exitCodesResponseTimesSum.get(statusCode) ?? 0) + +responseTime
+		(exitCodesRTSum.get(statusCode) ?? 0) + +responseTime
+	);
+
+	countryCodes.set(countryCode, (countryCodes.get(countryCode) ?? 0) + 1);
+	countryCodesRTSum.set(
+		countryCode,
+		(countryCodesRTSum.get(countryCode) ?? 0) + +responseTime
 	);
     routeResponseTimesSum.set(
         route,
@@ -57,9 +69,14 @@ for (let i = 0; i < requests.length - 1; i++) {
 
 const top10Ips = utils.getTop10ByKVP([...ips.entries()]);
 const top10Routes = utils.getTop10ByKVP([...routes.entries()]);
-const averageResponseSpeedByStatusCode = [
-	...exitCodesResponseTimesSum.entries(),
-].map(([statusCode, val]) => [statusCode, val / exitCodes.get(statusCode)]);
+
+const averageResponseSpeedByStatusCode = [...exitCodesRTSum.entries()].map(
+	([statusCode, val]) => [statusCode, val / exitCodes.get(statusCode)]
+);
+
+const averageResponseTimeByCountryCode = [...countryCodesRTSum.entries()].map(
+	([statusCode, val]) => [statusCode, val / countryCodes.get(statusCode)]
+);
 
 const averageResponseSpeedByRoute = [
     ...routeResponseTimesSum.entries(),
@@ -97,6 +114,11 @@ console.log(
         // ...top10RoutesByAverageResponseSpeed.map(
         //     ([route, time]) => `Route ${route} : ${time.toFixed(5)}`
         // ),
+
+		`\nAverage Response Time By Country Code`,
+		...averageResponseTimeByCountryCode.map(
+			([country, time]) => `Country ${country} : ${time.toFixed(5)}`
+		),
 	].join("\n")
 );
 
