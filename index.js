@@ -16,6 +16,7 @@ const ips = new Map();
 const routes = new Map();
 const exitCodes = new Map();
 const exitCodesResponseTimesSum = new Map();
+const routeResponseTimesSum = new Map();
 let startDate, endDate;
 
 for (let i = 0; i < requests.length - 1; i++) {
@@ -45,6 +46,10 @@ for (let i = 0; i < requests.length - 1; i++) {
 		statusCode,
 		(exitCodesResponseTimesSum.get(statusCode) ?? 0) + +responseTime
 	);
+    routeResponseTimesSum.set(
+        route,
+        (routeResponseTimesSum.get(route) ?? 0) + +responseTime
+    );
 
 	if (i == 0) startDate = dateString;
 	else if (i == requests.length - 2) endDate = dateString;
@@ -55,6 +60,18 @@ const top10Routes = utils.getTop10ByKVP([...routes.entries()]);
 const averageResponseSpeedByStatusCode = [
 	...exitCodesResponseTimesSum.entries(),
 ].map(([statusCode, val]) => [statusCode, val / exitCodes.get(statusCode)]);
+
+const averageResponseSpeedByRoute = [
+    ...routeResponseTimesSum.entries(),
+].map(([route, val]) => [route, val / routes.get(route)]);
+
+const routeResponseTimeObj = Object.fromEntries(utils.sortMap(new Map(averageResponseSpeedByRoute)));
+fs.writeFileSync("routeTimes.json", JSON.stringify(routeResponseTimeObj, null, 2, "utf-8"));
+
+
+const top10RoutesByAvgResponseSpeed = utils.getTop10ByKVP([ ... averageResponseSpeedByRoute]);
+
+console.log(top10RoutesByAvgResponseSpeed);
 
 const activityByHighestActivityIps = top10Ips.reduce(
 	(prev, [_ip, activity]) => prev + activity,
@@ -76,6 +93,10 @@ console.log(
 		...averageResponseSpeedByStatusCode.map(
 			([code, time]) => `Status ${code} : ${time.toFixed(5)}`
 		),
+        // `\nAverage Response Time by Route`,
+        // ...top10RoutesByAverageResponseSpeed.map(
+        //     ([route, time]) => `Route ${route} : ${time.toFixed(5)}`
+        // ),
 	].join("\n")
 );
 
