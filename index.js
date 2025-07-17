@@ -6,11 +6,10 @@ const utils = require("./utils");
  * My initial approach is to start with some exploratory analysis.
  */
 
-const file = fs.readFileSync(path.join(__dirname + "/sample-log.log"), {
+// read file and split lines
+const requests = fs.readFileSync(path.join(__dirname + "/sample-log.log"), {
 	encoding: "utf-8",
-});
-
-const requests = file.split("\n");
+}).split("\n");
 
 /* Maps */
 const ips = new Map();
@@ -23,23 +22,6 @@ const countryCodes = new Map();
 const countryCodesRTSum = new Map();
 const paramCounts = new Map();
 const paramCountRTSum = new Map();
-
-/* construct a counter from a map */
-function Counter(map) {
-    dict = new Map();
-    for (const [key, value] of map) {
-        dict.set(key, (dict.get(key) ?? 0) + 1);
-    }
-    return dict;
-}
-
-function scoreCounter(counter) {
-    sum = 0;
-    for (const [_, count] of counter) {
-        sum += count * count
-    }
-    return sum;
-}
 
 let startDate, endDate;
 
@@ -64,42 +46,28 @@ for (let i = 0; i < requests.length - 1; i++) {
 		responseTime,
 	] = match.slice(1);
 
-	ips.set(ip, (ips.get(ip) ?? 0) + 1);
-	routes.set(route, (routes.get(route) ?? 0) + 1);
-	exitCodes.set(statusCode, (exitCodes.get(statusCode) ?? 0) + 1);
-	exitCodesRTSum.set(
-		statusCode,
-		(exitCodesRTSum.get(statusCode) ?? 0) + +responseTime
-	);
+    utils.incrementCounter(ips, ip);
+    utils.incrementCounter(routes, route);
+    utils.incrementCounter(exitCodes, statusCode);
+    utils.addValue(exitCodesRTSum, statusCode, responseTime);
+    utils.incrementCounter(countryCodes, countryCode);
+    utils.addValue(countryCodesRTSum, countryCode, responseTime);
+    utils.addValue(routesRTSum, route, responseTime);
 
-	countryCodes.set(countryCode, (countryCodes.get(countryCode) ?? 0) + 1);
-	countryCodesRTSum.set(
-		countryCode,
-		(countryCodesRTSum.get(countryCode) ?? 0) + +responseTime
-	);
-	routesRTSum.set(route, (routesRTSum.get(route) ?? 0) + +responseTime);
-
-	// const paramsString = route.split("?");
-	// if (paramsString.length > 1) {
-	// 	const searchParams = new URLSearchParams(paramsString[1]);
-	// }
     const paramsString = route.split("?")
     if (paramsString.length > 1) {
         const searchParams = new URLSearchParams(paramsString[1]);
-        paramCounter = Counter(searchParams);
-        score = scoreCounter(paramCounter);
-        // console.log(Counter(searchParams));
-
-        paramCounts.set(score, (paramCounts.get(score) ?? 0) + 1);
-        paramCountRTSum.set(
-            score,
-            (paramCountRTSum.get(score) ?? 0) + +responseTime
-        );
+        score = utils.scoreCounter(utils.Counter(searchParams));
+        utils.incrementCounter(paramCounts, score);
+        utils.addValue(paramCountRTSum, score, responseTime);
     }
     
 	if (i == 0) startDate = dateString;
 	else if (i == requests.length - 2) endDate = dateString;
 }
+
+
+/* convert maps into averages, and get top 10 */
 
 const top10Ips = utils.getTop10ByKVP([...ips.entries()]);
 // const top10Routes = utils.getTop10ByKVP([...routes.entries()]);
@@ -115,16 +83,16 @@ const averageResponseTimeByCountryCode = utils.averageRT(
 );
 
 const averageResponseSpeedByRoute = utils.averageRT(routesRTSum, routes);
-const averageResponseTimeByParamCount = [ ...paramCountRTSum.entries()].map(
-    ([score, val]) => [score, val / paramCounts.get(score)]
+
+const averageResponseTimeByParamCount = utils.averageRT(
+    paramCountRTSum, 
+    paramCounts
 );
+
+/* save to file */
 
 const paramCountObj = utils.sortMap(new Map(averageResponseTimeByParamCount));
 fs.writeFileSync("paramCountTimes.json", JSON.stringify(paramCountObj, null, 2, "utf-8"));
-
-// const averageResponseSpeedByRoute = [
-//     ...routeResponseTimesSum.entries(),
-// ].map(([route, val]) => [route, val / routes.get(route)]);
 
 const routeResponseTimeObj = Object.fromEntries(
 	utils.sortMap(new Map(averageResponseSpeedByRoute))
@@ -138,6 +106,8 @@ const activityByHighestActivityIps = top10Ips.reduce(
 	(prev, [_ip, activity]) => prev + activity,
 	0
 );
+
+/* print to terminal */
 
 console.log(
 	[

@@ -29,4 +29,46 @@ module.exports = {
 			route,
 			val / mapofRTs.get(route),
 		]),
-};
+
+    /**
+     * @param {Map} map A map of keys against values
+     * @returns {Map} A map of keys against its number of occurrences
+     */
+    Counter: (map) => {
+        dict = new Map();
+        for (const [key, value] of map) {
+            dict.set(key, (dict.get(key) ?? 0) + 1);
+        }
+        return dict;
+    },
+
+    /**
+     * @param {Map} counter A map of keys against number of occurrences
+     * @returns {number} Sum of squares of the values
+     */
+    scoreCounter: (counter) => {
+        sum = 0;
+        for (const [_, count] of counter) {
+            sum += count * count
+        }
+        return sum;
+    },
+
+    /**
+     * @param {Map} map A map of keys against number of occurrences
+     * @param {any} key A key to insert into the counter
+     */
+    incrementCounter: (map, key) => {
+        map.set(key, (map.get(key) ?? 0) + 1);
+    },
+    
+    /**
+     * @param {Map} map A map of keys against values
+     * @param {any} key A key to insert
+     * @value {any} value A value to add to the existing value of the key
+     */
+    addValue: (map, key, value) => {
+        map.set(key, (map.get(key) ?? 0) + +value);
+    }
+
+}
