@@ -14,10 +14,9 @@ const requests = file.split("\n");
 
 const ips = new Map();
 const routes = new Map();
+const routesRTSum = new Map();
 
 const exitCodes = new Map();
-const exitCodesResponseTimesSum = new Map();
-const routeResponseTimesSum = new Map();
 const exitCodesRTSum = new Map();
 
 const countryCodes = new Map();
@@ -58,10 +57,7 @@ for (let i = 0; i < requests.length - 1; i++) {
 		countryCode,
 		(countryCodesRTSum.get(countryCode) ?? 0) + +responseTime
 	);
-    routeResponseTimesSum.set(
-        route,
-        (routeResponseTimesSum.get(route) ?? 0) + +responseTime
-    );
+	routesRTSum.set(route, (routesRTSum.get(route) ?? 0) + +responseTime);
 
 	if (i == 0) startDate = dateString;
 	else if (i == requests.length - 2) endDate = dateString;
@@ -70,25 +66,25 @@ for (let i = 0; i < requests.length - 1; i++) {
 const top10Ips = utils.getTop10ByKVP([...ips.entries()]);
 const top10Routes = utils.getTop10ByKVP([...routes.entries()]);
 
-const averageResponseSpeedByStatusCode = [...exitCodesRTSum.entries()].map(
-	([statusCode, val]) => [statusCode, val / exitCodes.get(statusCode)]
+const averageResponseSpeedByStatusCode = utils.averageRT(
+	exitCodesRTSum,
+	exitCodes
 );
 
-const averageResponseTimeByCountryCode = [...countryCodesRTSum.entries()].map(
-	([statusCode, val]) => [statusCode, val / countryCodes.get(statusCode)]
+const averageResponseTimeByCountryCode = utils.averageRT(
+	countryCodesRTSum,
+	countryCodes
 );
 
-const averageResponseSpeedByRoute = [
-    ...routeResponseTimesSum.entries(),
-].map(([route, val]) => [route, val / routes.get(route)]);
+const averageResponseSpeedByRoute = utils.averageRT(routesRTSum, routes);
 
-const routeResponseTimeObj = Object.fromEntries(utils.sortMap(new Map(averageResponseSpeedByRoute)));
-fs.writeFileSync("routeTimes.json", JSON.stringify(routeResponseTimeObj, null, 2, "utf-8"));
-
-
-const top10RoutesByAvgResponseSpeed = utils.getTop10ByKVP([ ... averageResponseSpeedByRoute]);
-
-console.log(top10RoutesByAvgResponseSpeed);
+const routeResponseTimeObj = Object.fromEntries(
+	utils.sortMap(new Map(averageResponseSpeedByRoute))
+);
+fs.writeFileSync(
+	"routeTimes.json",
+	JSON.stringify(routeResponseTimeObj, null, 2, "utf-8")
+);
 
 const activityByHighestActivityIps = top10Ips.reduce(
 	(prev, [_ip, activity]) => prev + activity,
@@ -110,10 +106,10 @@ console.log(
 		...averageResponseSpeedByStatusCode.map(
 			([code, time]) => `Status ${code} : ${time.toFixed(5)}`
 		),
-        // `\nAverage Response Time by Route`,
-        // ...top10RoutesByAverageResponseSpeed.map(
-        //     ([route, time]) => `Route ${route} : ${time.toFixed(5)}`
-        // ),
+		// `\nAverage Response Time by Route`,
+		// ...top10RoutesByAverageResponseSpeed.map(
+		//     ([route, time]) => `Route ${route} : ${time.toFixed(5)}`
+		// ),
 
 		`\nAverage Response Time By Country Code`,
 		...averageResponseTimeByCountryCode.map(
