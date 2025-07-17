@@ -21,6 +21,25 @@ const exitCodes = new Map();
 const exitCodesRTSum = new Map();
 const countryCodes = new Map();
 const countryCodesRTSum = new Map();
+const paramCounts = new Map();
+const paramCountRTSum = new Map();
+
+/* construct a counter from a map */
+function Counter(map) {
+    dict = new Map();
+    for (const [key, value] of map) {
+        dict.set(key, (dict.get(key) ?? 0) + 1);
+    }
+    return dict;
+}
+
+function scoreCounter(counter) {
+    sum = 0;
+    for (const [_, count] of counter) {
+        sum += count * count
+    }
+    return sum;
+}
 
 let startDate, endDate;
 
@@ -60,11 +79,24 @@ for (let i = 0; i < requests.length - 1; i++) {
 	);
 	routesRTSum.set(route, (routesRTSum.get(route) ?? 0) + +responseTime);
 
-	const paramsString = route.split("?");
-	if (paramsString.length > 1) {
-		const searchParams = new URLSearchParams(paramsString[1]);
-	}
+	// const paramsString = route.split("?");
+	// if (paramsString.length > 1) {
+	// 	const searchParams = new URLSearchParams(paramsString[1]);
+	// }
+    const paramsString = route.split("?")
+    if (paramsString.length > 1) {
+        const searchParams = new URLSearchParams(paramsString[1]);
+        paramCounter = Counter(searchParams);
+        score = scoreCounter(paramCounter);
+        // console.log(Counter(searchParams));
 
+        paramCounts.set(score, (paramCounts.get(score) ?? 0) + 1);
+        paramCountRTSum.set(
+            score,
+            (paramCountRTSum.get(score) ?? 0) + +responseTime
+        );
+    }
+    
 	if (i == 0) startDate = dateString;
 	else if (i == requests.length - 2) endDate = dateString;
 }
@@ -83,6 +115,16 @@ const averageResponseTimeByCountryCode = utils.averageRT(
 );
 
 const averageResponseSpeedByRoute = utils.averageRT(routesRTSum, routes);
+const averageResponseTimeByParamCount = [ ...paramCountRTSum.entries()].map(
+    ([score, val]) => [score, val / paramCounts.get(score)]
+);
+
+const paramCountObj = utils.sortMap(new Map(averageResponseTimeByParamCount));
+fs.writeFileSync("paramCountTimes.json", JSON.stringify(paramCountObj, null, 2, "utf-8"));
+
+// const averageResponseSpeedByRoute = [
+//     ...routeResponseTimesSum.entries(),
+// ].map(([route, val]) => [route, val / routes.get(route)]);
 
 const routeResponseTimeObj = Object.fromEntries(
 	utils.sortMap(new Map(averageResponseSpeedByRoute))
