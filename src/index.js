@@ -31,7 +31,7 @@ let startDate, endDate;
 for (let i = 0; i < requests.length - 1; i++) {
 	const request = requests[i];
 	const match = request.match(
-		/^(\d{1,3}(?:\.\d{1,3}){3}) - ([A-Z]{2}) - \[([^\]]+)] "(\w+) ([^"]+) HTTP\/[\d.]+" (\d{3}) (\d+) "([^"]*)" "([^"]*)" (\d+)$/
+		/^(\d{1,3}(?:\.\d{1,3}){3}) - ([A-Z]{2}) - \[([^\]]+)] "(\w+) ([^"]+) HTTP\/[\d.]+" (\d{3}) (\d+) "([^"]*)" "([^"]*)" (\d+)/
 	);
 	// This log line does not conform to the log file standard
 	if (!match) continue;
